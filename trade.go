@@ -87,7 +87,7 @@ func DetermineTradeLeg(trades []*Trade) {
 	positions := make(map[string]map[string]interface{})
 
 	pnl := 0.0
-	trade_num := 1
+	tradeNum := 0
 
 	for _, trade := range trades {
 		if position, exists := positions[trade.FinancialInstrument]; exists {
@@ -96,7 +96,6 @@ func DetermineTradeLeg(trades []*Trade) {
 				position["quantity"] = position["quantity"].(int) + trade.Quantity
 			} else {
 				position["quantity"] = position["quantity"].(int) - trade.Quantity
-
 			}
 			position["netAmount"] = position["netAmount"].(float64) + trade.RawAmount
 
@@ -108,19 +107,19 @@ func DetermineTradeLeg(trades []*Trade) {
 
 				logger.Printf(
 					"%v, %v, %v, %v@%v trade_leg_net=%.2f, overall_pnl=%.2f",
-					trade_num, trade.FinancialInstrument, trade.Side, trade.Quantity,
+					position["tradeNum"], trade.FinancialInstrument, trade.Side, trade.Quantity,
 					trade.Price, trade.NetAmount, trade.PNL)
 				delete(positions, trade.FinancialInstrument)
-				trade_num++
 			} else {
 				logger.Printf(
 					"%v, %v, %v, %v@%v",
-					trade_num, trade.FinancialInstrument, trade.Side, trade.Quantity, trade.Price)
+					position["tradeNum"], trade.FinancialInstrument, trade.Side, trade.Quantity, trade.Price)
 			}
 		} else {
 			// this is a new position, open the position
+			tradeNum++
 			logger.Printf("%v, %v, %v, %v@%.2f",
-				trade_num, trade.FinancialInstrument, trade.Side, trade.Quantity, trade.Price)
+				tradeNum, trade.FinancialInstrument, trade.Side, trade.Quantity, trade.Price)
 			initQty := 0
 			if trade.Side == "buy" {
 				initQty = trade.Quantity
@@ -130,11 +129,12 @@ func DetermineTradeLeg(trades []*Trade) {
 			positions[trade.FinancialInstrument] = map[string]interface{}{
 				"quantity":  initQty,
 				"netAmount": trade.RawAmount,
+				"tradeNum":  tradeNum,
 			}
 		}
 	}
 
-	logger.Info("Total trades executed: ", trade_num-1)
+	logger.Info("Total trades executed: ", tradeNum-1)
 }
 
 func (t *Trade) calculateRawAmount() {

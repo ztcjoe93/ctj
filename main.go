@@ -14,7 +14,6 @@ var (
 )
 
 func main() {
-	// log-related intiialization
 	logFile, err := os.OpenFile("ctj.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		logger.Fatal("Error opening log file:", err)
